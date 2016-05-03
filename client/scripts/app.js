@@ -1,13 +1,15 @@
 var app = {
   server: 'https://api.parse.com/1/classes/messages',
   username: '',
-  roomname: 'lobby'
+  roomname: 'lobby',
+  dupFree: {}
 };
 
 app.init = function() {
   $('#send').on('submit', app.handleSubmit);
-  $('#rooms').on('change', function() {
-    app.roomname = $('#rooms').val();
+  $('#roomSelect').on('change', function() {
+    app.roomname = $(this).val();
+    app.fetch();
   });
   app.username = window.location.search.substring(1).split('=')[1];
   app.fetch();
@@ -49,32 +51,36 @@ app.clearMessages = function() {
 };
 
 app.addMessage = function(data) {
-  // app.clearMessages();
+  app.clearMessages();
   data.results.forEach(function(chat) {
-    var $user = $('<div class="username"></div>');
-    var $message = $('<div></div>');
-    var $container = $('<div class="chat"></div>');
+    if (chat.roomname === app.roomname) {
+      console.log('chat: ', chat.roomname);
+      console.log('app: ', app.roomname);
+      var $user = $('<div class="username"></div>');
+      var $message = $('<div></div>');
+      var $container = $('<div class="chat"></div>');
 
-    $user.text(chat.username);
-    $message.text(chat.text);
-    $user.attr('id', chat.username);
-    $user.on('click', function() {
-      app.addFriend(chat.username);
-    });
+      $user.text(chat.username);
+      $message.text(chat.text);
+      $user.attr('id', chat.username);
+      $user.on('click', function() {
+        app.addFriend(chat.username);
+      });
 
-    $container.append($user, $message);
-    $('#chats').append($container);
+      $container.append($user, $message);
+      $('#chats').append($container);
+    }
   });
 
 };
 
 app.addRoom = function(data) {
-  var dupFree = {};
   data.results.forEach(function(chat) {
     var $room = $('<option></option>');
-    if (!dupFree.hasOwnProperty(chat.roomname)) {
+    $room.attr('class', 'room');
+    if (!app.dupFree.hasOwnProperty(chat.roomname)) {
       $('#roomSelect').append($room.text(chat.roomname));
-      dupFree[chat.roomname] = 0;
+      app.dupFree[chat.roomname] = 0;
     }
   });
 
