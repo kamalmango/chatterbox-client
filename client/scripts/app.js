@@ -2,7 +2,8 @@ var app = {
   server: 'https://api.parse.com/1/classes/messages',
   username: '',
   roomname: 'lobby',
-  dupFree: {}
+  dupFree: {},
+  friends: {}
 };
 
 app.init = function() {
@@ -90,7 +91,13 @@ app.addRoom = function(data) {
 };
 
 app.addFriend = function(username) {
-
+  $('#friends').children().detach();
+  app.friends[username] = username;
+  for (var friend in app.friends) {
+    console.log(app.friends);
+    var $val = $('<div></div>');
+    $('#friends').append($val.text(friend));
+  }
 };
 
 app.handleSubmit = function(e) {
