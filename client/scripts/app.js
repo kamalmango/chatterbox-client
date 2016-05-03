@@ -14,6 +14,8 @@ app.init = function() {
   });
   app.username = window.location.search.substring(1).split('=')[1];
   app.fetch();
+
+  setInterval(app.fetch, 10000);
 };
 
 app.send = function(message) {
@@ -55,28 +57,30 @@ app.clearMessages = function() {
 
 app.addMessage = function(data) {
   app.clearMessages();
-  data.results.forEach(function(chat) {
-    if (chat.roomname === app.roomname) {
-      var $user = $('<div class="username"></div>');
-      var $message = $('<div></div>');
-      var $container = $('<div class="chat"></div>');
+  var filteredData = _.filter(data.results, function(chat) {
+    return chat.roomname === app.roomname;
+  });
 
-      $user.text(chat.username);
-      $message.text(chat.text);
-      $user.attr('id', chat.username);
-      $user.on('click', function() {
-        app.addFriend(chat.username);
-      });
+  _.each(filteredData, function(chat) {
+    var $user = $('<div class="username"></div>');
+    var $message = $('<div></div>');
+    var $container = $('<div class="chat"></div>');
 
-      $container.append($user, $message);
-      $('#chats').append($container);
-    }
+    $user.text(chat.username);
+    $message.text(chat.text);
+    $user.attr('id', chat.username);
+    $user.on('click', function() {
+      app.addFriend(chat.username);
+    });
+
+    $container.append($user, $message);
+    $('#chats').append($container);
   });
 
 };
 
 app.addRoom = function(data) {
-  data.results.forEach(function(chat) {
+  _.each(data.results, function(chat) {
     var $room = $('<option></option>');
     $room.attr('class', 'room');
     if (!app.dupFree.hasOwnProperty(chat.roomname)) {
@@ -93,17 +97,16 @@ app.addRoom = function(data) {
 app.addFriend = function(username) {
   $('#friends').children().detach();
   app.friends[username] = username;
-  for (var friend in app.friends) {
+  _.each(app.friends, function(friend) {
     console.log(app.friends);
     var $val = $('<div></div>');
     $('#friends').append($val.text(friend));
-  }
+  });
 };
 
 app.handleSubmit = function(e) {
   if ($('#newRoom').val() !== '') {
     app.roomname = $('#newRoom').val();
-
   }
   var message = {
     username: app.username,
