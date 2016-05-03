@@ -1,13 +1,17 @@
-// YOUR CODE HERE:
-
-var app = {server: 'https://api.parse.com/1/classes/messages'};
+var app = {
+  server: 'https://api.parse.com/1/classes/messages',
+  username: '',
+  rooms: ['lobby']
+};
 
 app.init = function() {
-  $('.submit').click(function() {
-    app.send($('#message').val());
+  $('#send').on('submit', app.handleSubmit);
+  $('#rooms').on('change', function() {
+    app.roomname = $('#rooms').val();
   });
-
-  // $('#main').append('<div id="chats"></div>');
+  app.username = window.location.search.substring(1).split('=')[1];
+  app.populateRooms();
+  app.fetch();
 };
 
 app.send = function(message) {
@@ -16,11 +20,11 @@ app.send = function(message) {
     type: 'POST',
     data: JSON.stringify(message),
     success: function(data) {
-      console.log('success', data);
-      // something to update the client app
+      console.log('Message successfully sent!');
+      app.fetch();
     },
-    error: function(data) {
-      console.error('Error');
+    error: function(err) {
+      console.error('Error posting message: ', err);
     }
   });
 };
@@ -31,11 +35,12 @@ app.fetch = function() {
     type: 'GET',
     data: {include: 'createdAt'},
     success: function(data) {
-      console.log('success', data);
+      console.log('Retrieved all messages');
       app.addMessage(data);
+      app.addRoom(data);
     },
-    error: function(data) {
-      console.error('Error');
+    error: function(err) {
+      console.error('Error fetching data: ', err);
     }
   });
 };
@@ -45,17 +50,53 @@ app.clearMessages = function() {
 };
 
 app.addMessage = function(data) {
-  $('#chats').append('<div>' + data.text + '</div>');
+  // app.clearMessages();
+  data.results.forEach(function(val) {
+    var $user = $('<div class="username"></div>');
+    var $message = $('<div></div>');
+    var $container = $('<div class="chat"></div>');
+
+    $user.text(val.username);
+    $message.text(val.text);
+    $user.attr('id', val.username);
+    $user.on('click', function() {
+      app.addFriend(val.username);
+    });
+
+    $container.append($user, $message);
+    $('#chats').append($container);
+  });
+
 };
 
-app.addRoom = function() {
+app.addRoom = function(data) {
+  $('#roomSelect').append('<option>' + data.roomname + '</option>');
+};
+
+app.addFriend = function(username) {
 
 };
 
-app.addFriend = function() {
-
+app.handleSubmit = function(e) {
+  console.log(window.location.search.substring(1).split("=")[1]);
+  var message = {
+    username: app.username,
+    text: $('#message').val(),
+    roomname: $('#roomSelect').val()
+  };
+  app.send(message);
+  e.preventDefault();
 };
 
-app.handleSubmit = function() {
-
+app.populateRooms = function() {
+  app.rooms.forEach(function(val) {
+    var $room = $('<option></option>');
+    $room.text(val);
+    $('#roomSelect').append($room);
+  });
 };
+
+
+$(document).ready(function() {
+  app.init();
+});
