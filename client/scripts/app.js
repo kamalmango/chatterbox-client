@@ -1,7 +1,7 @@
 var app = {
   server: 'https://api.parse.com/1/classes/messages',
   username: '',
-  rooms: ['lobby']
+  roomname: 'lobby'
 };
 
 app.init = function() {
@@ -10,7 +10,6 @@ app.init = function() {
     app.roomname = $('#rooms').val();
   });
   app.username = window.location.search.substring(1).split('=')[1];
-  app.populateRooms();
   app.fetch();
 };
 
@@ -33,7 +32,7 @@ app.fetch = function() {
   $.ajax({
     url: app.server,
     type: 'GET',
-    data: {include: 'createdAt'},
+    // data: {include: 'createdAt'},
     success: function(data) {
       console.log('Retrieved all messages');
       app.addMessage(data);
@@ -51,16 +50,16 @@ app.clearMessages = function() {
 
 app.addMessage = function(data) {
   // app.clearMessages();
-  data.results.forEach(function(val) {
+  data.results.forEach(function(chat) {
     var $user = $('<div class="username"></div>');
     var $message = $('<div></div>');
     var $container = $('<div class="chat"></div>');
 
-    $user.text(val.username);
-    $message.text(val.text);
-    $user.attr('id', val.username);
+    $user.text(chat.username);
+    $message.text(chat.text);
+    $user.attr('id', chat.username);
     $user.on('click', function() {
-      app.addFriend(val.username);
+      app.addFriend(chat.username);
     });
 
     $container.append($user, $message);
@@ -70,7 +69,15 @@ app.addMessage = function(data) {
 };
 
 app.addRoom = function(data) {
-  $('#roomSelect').append('<option>' + data.roomname + '</option>');
+  var dupFree = {};
+  data.results.forEach(function(chat) {
+    var $room = $('<option></option>');
+    if (!dupFree.hasOwnProperty(chat.roomname)) {
+      $('#roomSelect').append($room.text(chat.roomname));
+      dupFree[chat.roomname] = 0;
+    }
+  });
+
 };
 
 app.addFriend = function(username) {
@@ -78,7 +85,6 @@ app.addFriend = function(username) {
 };
 
 app.handleSubmit = function(e) {
-  console.log(window.location.search.substring(1).split("=")[1]);
   var message = {
     username: app.username,
     text: $('#message').val(),
@@ -88,13 +94,7 @@ app.handleSubmit = function(e) {
   e.preventDefault();
 };
 
-app.populateRooms = function() {
-  app.rooms.forEach(function(val) {
-    var $room = $('<option></option>');
-    $room.text(val);
-    $('#roomSelect').append($room);
-  });
-};
+
 
 
 $(document).ready(function() {
