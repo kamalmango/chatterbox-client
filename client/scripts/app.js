@@ -23,6 +23,8 @@ app.send = function(message) {
     success: function(data) {
       console.log('Message successfully sent!');
       app.fetch();
+      $('#message').val('');
+      $('#newRoom').val('');
     },
     error: function(err) {
       console.error('Error posting message: ', err);
@@ -34,9 +36,9 @@ app.fetch = function() {
   $.ajax({
     url: app.server,
     type: 'GET',
-    // data: {include: 'createdAt'},
     success: function(data) {
       console.log('Retrieved all messages');
+
       app.addMessage(data);
       app.addRoom(data);
     },
@@ -54,8 +56,6 @@ app.addMessage = function(data) {
   app.clearMessages();
   data.results.forEach(function(chat) {
     if (chat.roomname === app.roomname) {
-      console.log('chat: ', chat.roomname);
-      console.log('app: ', app.roomname);
       var $user = $('<div class="username"></div>');
       var $message = $('<div></div>');
       var $container = $('<div class="chat"></div>');
@@ -82,6 +82,9 @@ app.addRoom = function(data) {
       $('#roomSelect').append($room.text(chat.roomname));
       app.dupFree[chat.roomname] = 0;
     }
+    if (chat.roomname === app.roomname) {
+      $room.attr('selected', true);
+    }
   });
 
 };
@@ -91,10 +94,14 @@ app.addFriend = function(username) {
 };
 
 app.handleSubmit = function(e) {
+  if ($('#newRoom').val() !== '') {
+    app.roomname = $('#newRoom').val();
+
+  }
   var message = {
     username: app.username,
     text: $('#message').val(),
-    roomname: $('#roomSelect').val()
+    roomname: app.roomname
   };
   app.send(message);
   e.preventDefault();
